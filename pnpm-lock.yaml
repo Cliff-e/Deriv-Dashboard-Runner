@@ -231,7 +231,7 @@ importers:
         specifier: ^2.3.2
         version: 2.4.5(@emotion/is-prop-valid@0.8.8)(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@deriv-com/translations':
-        specifier: ^1.4.0
+        specifier: 1.4.0
         version: 1.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@deriv-com/ui':
         specifier: ^1.37.1
@@ -249,7 +249,7 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@deriv/quill-icons':
-        specifier: ^2.4.10
+        specifier: 2.4.10
         version: 2.4.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@svgr/core':
         specifier: ^8.1.0
@@ -1846,7 +1846,6 @@ packages:
 
   '@deriv/api-types@1.0.4830':
     resolution: {integrity: sha512-A2LomXPUA/eSTTPqfnxpnoTSZmiVPYnjvk3g3PlPzoplUyhUALNGfGmCQI0sNUgNObYM/Tt/5MkTyE8fqLDBRg==}
-    bundledDependencies: []
 
   '@deriv/deriv-api@1.0.15':
     resolution: {integrity: sha512-kqNDjUqK37Ch1zS24G7ahYgN2gyF//CFR3e2kdxX/enLD/zHvkiIKDw045J2ZiAvab9gc4H94qB0weDDfe6WXg==}
@@ -4159,6 +4158,7 @@ packages:
   '@xmldom/xmldom@0.8.12':
     resolution: {integrity: sha512-9k/gHF6n/pAi/9tqr3m3aqkuiNosYTurLLUtc7xQ9sxB/wm7WPygCv8GYa6mS0fLJEHhqMC1ATYhz++U/lRHqg==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
