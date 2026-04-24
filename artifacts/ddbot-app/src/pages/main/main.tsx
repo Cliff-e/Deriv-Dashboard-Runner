@@ -40,6 +40,8 @@ const FreeBots = lazy(() => import('../free-bots'));
 const AnalysisTool = lazy(() => import('../analysis-tool'));
 
 const AiBots = lazy(() => import('../ai-bots/AiBots'));
+
+const DCircles = lazy(() => import('../d-circles/DCircles'));
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
     const { dashboard, load_modal, run_panel, quick_strategy, summary_card } = useStore();
@@ -70,15 +72,17 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-   const hash = [
+ const hash = [
   'dashboard',
   'bot_builder',
   'chart',
   'tutorial',
   'free_bots',
   'analysis_tool',
-  'ai_bots' // ADD THIS
+  'ai_bots',
+  'd_circles'
 ];
+
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -286,156 +290,53 @@ const AppWrapper = observer(() => {
                 >
                     <div>
                         {!isDesktop && left_tab_shadow && <span className='tabs-shadow tabs-shadow--left' />}{' '}
-                        <Tabs active_index={active_tab} className='main__tabs' onTabItemClick={handleTabChange} top>
-                            <div
-                                label={
-                                    <>
-                                        <LabelPairedObjectsColumnCaptionRegularIcon
-                                            height='24px'
-                                            width='24px'
-                                            fill='var(--text-general)'
-                                        />
-                                        <Localize i18n_default_text='Dashboard' />
-                                    </>
-                                }
-                                id='id-dbot-dashboard'
-                            >
-                                <Dashboard handleTabChange={handleTabChange} />
-                            </div>
-                            <div
-                                label={
-                                    <>
-                                        <LabelPairedPuzzlePieceTwoCaptionBoldIcon
-                                            height='24px'
-                                            width='24px'
-                                            fill='var(--text-general)'
-                                        />
-                                        <Localize i18n_default_text='Bot Builder' />
-                                    </>
-                                }
-                                id='id-bot-builder'
-                            />
-                            <div
-                                label={
-                                    <>
-                                        <LabelPairedChartLineCaptionRegularIcon
-                                            height='24px'
-                                            width='24px'
-                                            fill='var(--text-general)'
-                                        />
-                                        <Localize i18n_default_text='Charts' />
-                                    </>
-                                }
-                                id={
-                                    is_chart_modal_visible || is_trading_view_modal_visible
-                                        ? 'id-charts--disabled'
-                                        : 'id-charts'
-                                }
-                            >
-                                <Suspense
-                                    fallback={<ChunkLoader message={localize('Please wait, loading chart...')} />}
-                                >
-                                    <ChartWrapper show_digits_stats={false} />
-                                </Suspense>
-                            </div>
-                            <div
-                                label={
-                                    <>
-                                        <LegacyGuide1pxIcon
-                                            height='16px'
-                                            width='16px'
-                                            fill='var(--text-general)'
-                                            className='icon-general-fill-g-path'
-                                        />
-                                        <Localize i18n_default_text='Tutorials' />
-                                    </>
-                                }
-                                id='id-tutorials'
-                            >
-                                <div className='tutorials-wrapper'>
-                                    <Suspense
-                                        fallback={
-                                            <ChunkLoader message={localize('Please wait, loading tutorials...')} />
-                                        }
-                                    >
-                                        <Tutorial handleTabChange={handleTabChange} />
-                                    </Suspense>
-                                </div>
-                            </div>
-                            <div
-                                label={
-                                    <>
-                                        <LabelPairedObjectsColumnCaptionRegularIcon
-                                            height='24px'
-                                            width='24px'
-                                            fill='var(--text-general)'
-                                        />
-                                        <Localize i18n_default_text='Free Bots' />
-                                    </>
-                                }
-                                id='id-free-bots'
-                            >
-                                <div className='free-bots-wrapper'>
-                                    <Suspense
-                                        fallback={
-                                            <ChunkLoader message={localize('Please wait, loading free bots...')} />
-                                        }
-                                    >
-                                        <FreeBots />
-                                    </Suspense>
-                                </div>
-                            </div>
-                            <div
-                                label={
-                                    <>
-                                        <LabelPairedChartLineCaptionRegularIcon
-                                            height='24px'
-                                            width='24px'
-                                            fill='var(--text-general)'
-                                        />
-                                        <Localize i18n_default_text='Analysis Tool' />
-                                    </>
-                                }
-                                id='id-analysis-tool'
-                            >
-                                <div className='analysis-tool-wrapper'>
-                                    <Suspense
-                                        fallback={
-                                            <ChunkLoader message={localize('Please wait, loading analysis tool...')} />
-                                        }
-                                    >
-                                        <AnalysisTool />
-                                    </Suspense>
-                                </div>
-                                <div
-    label="AI Bots"
-    id="id-ai-bots"
->
-    <Suspense fallback={<ChunkLoader message="Loading AI Bots..." />}>
-        <AiBots />
-    </Suspense>
-</div>
-                            </div>
-                            <div
-    label={
-        <>
-            <LabelPairedObjectsColumnCaptionRegularIcon
-                height='24px'
-                width='24px'
-                fill='var(--text-general)'
-            />
-            <Localize i18n_default_text='AI Bots' />
-        </>
-    }
-    id='id-ai-bots'
->
-    <div className='ai-bots-wrapper'>
-        <Suspense fallback={<ChunkLoader message={localize('Loading AI Bots...')} />}>
+                       <Tabs active_index={active_tab} className='main__tabs' onTabItemClick={handleTabChange} top>
+
+    <div label={<>Dashboard</>} id='id-dbot-dashboard'>
+        <Dashboard handleTabChange={handleTabChange} />
+    </div>
+
+    <div label={<>Bot Builder</>} id='id-bot-builder'>
+        {/* Bot builder content (if any) */}
+    </div>
+
+    <div label={<>Charts</>} id='id-charts'>
+        <Suspense fallback={<ChunkLoader message="Loading chart..." />}>
+            <ChartWrapper show_digits_stats={false} />
+        </Suspense>
+    </div>
+
+    <div label={<>Tutorials</>} id='id-tutorials'>
+        <Suspense fallback={<ChunkLoader message="Loading tutorials..." />}>
+            <Tutorial handleTabChange={handleTabChange} />
+        </Suspense>
+    </div>
+
+    <div label={<>Free Bots</>} id='id-free-bots'>
+        <Suspense fallback={<ChunkLoader message="Loading free bots..." />}>
+            <FreeBots />
+        </Suspense>
+    </div>
+
+    <div label={<>Analysis Tool</>} id='id-analysis-tool'>
+        <Suspense fallback={<ChunkLoader message="Loading analysis tool..." />}>
+            <AnalysisTool />
+        </Suspense>
+    </div>
+
+    <div label={<>AI Bots</>} id='id-ai-bots'>
+        <Suspense fallback={<ChunkLoader message="Loading AI Bots..." />}>
             <AiBots />
         </Suspense>
     </div>
-</div>
-                        </Tabs>
+
+    <div label={<>D Circles</>} id='id-d-circles'>
+        <Suspense fallback={<ChunkLoader message="Loading D Circles..." />}>
+            <DCircles />
+        </Suspense>
+    </div>
+
+</Tabs>
                         {!isDesktop && right_tab_shadow && <span className='tabs-shadow tabs-shadow--right' />}{' '}
                     </div>
                 </div>

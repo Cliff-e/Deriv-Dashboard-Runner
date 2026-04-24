@@ -1,0 +1,46 @@
+.dcircles-container {
+    color: white;
+    padding: 10px;
+}
+
+.market-switcher {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.market-switcher button {
+    padding: 6px 10px;
+    background: #222;
+    border: 1px solid #444;
+    color: white;
+    cursor: pointer;
+}
+
+.market-switcher button.active {
+    border: 2px solid #00ff88;
+    background: #111;
+}
+
+.circles {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #111;
+}
+
+.stream {
+    margin-top: 15px;
+    font-size: 18px;
+    letter-spacing: 2px;
+}
