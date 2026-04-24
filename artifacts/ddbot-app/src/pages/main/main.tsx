@@ -32,14 +32,14 @@ import ChartModal from '../chart/chart-modal';
 import Dashboard from '../dashboard';
 import RunStrategy from '../dashboard/run-strategy';
 import './main.scss';
-import AiBots from '../ai-bots';
+
 
 const ChartWrapper = lazy(() => import('../chart/chart-wrapper'));
 const Tutorial = lazy(() => import('../tutorials'));
 const FreeBots = lazy(() => import('../free-bots'));
 const AnalysisTool = lazy(() => import('../analysis-tool'));
-const AiBots = lazy(() => import('../ai-bots'));
 
+const AiBots = lazy(() => import('../ai-bots/AiBots'));
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
     const { dashboard, load_modal, run_panel, quick_strategy, summary_card } = useStore();
@@ -70,7 +70,15 @@ const AppWrapper = observer(() => {
     const { clear } = summary_card;
     const { DASHBOARD, BOT_BUILDER } = DBOT_TABS;
     const init_render = React.useRef(true);
-    const hash = ['dashboard', 'bot_builder', 'chart', 'tutorial', 'free_bots', 'analysis_tool'];
+   const hash = [
+  'dashboard',
+  'bot_builder',
+  'chart',
+  'tutorial',
+  'free_bots',
+  'analysis_tool',
+  'ai_bots' // ADD THIS
+];
     const { isDesktop } = useDevice();
     const location = useLocation();
     const navigate = useNavigate();
@@ -399,6 +407,14 @@ const AppWrapper = observer(() => {
                                         <AnalysisTool />
                                     </Suspense>
                                 </div>
+                                <div
+    label="AI Bots"
+    id="id-ai-bots"
+>
+    <Suspense fallback={<ChunkLoader message="Loading AI Bots..." />}>
+        <AiBots />
+    </Suspense>
+</div>
                             </div>
                             <div
     label={
