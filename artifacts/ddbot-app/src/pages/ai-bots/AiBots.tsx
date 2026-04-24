@@ -4,10 +4,17 @@ const DERIV_WS = "wss://ws.derivws.com/websockets/v3";
 const APP_ID = "1089";
 
 const AiBots = () => {
+    const loginWithDeriv = () => {
+    const appId = "1089";
+    const redirectUri = encodeURIComponent(window.location.origin);
+
+    window.location.href =
+        `https://oauth.deriv.com/oauth2/authorize?app_id=${appId}&redirect_uri=${redirectUri}`;
+};
 
     // ================= ORIGINAL SETTINGS (UNCHANGED) =================
     const [digits, setDigits] = useState("2,1,8,0");
-    const [baseStake, setBaseStake] = useState(1);
+   
     const [martingale, setMartingale] = useState(true);
     const [martingaleFactor, setMartingaleFactor] = useState(2);
     const [targetProfit, setTargetProfit] = useState(10);
@@ -45,7 +52,12 @@ const AiBots = () => {
     const tickData = useRef<Record<string, number[]>>({});
     const ws = useRef<WebSocket | null>(null);
 
-    const [currentStake, setCurrentStake] = useState(baseStake);
+    const [baseStake, setBaseStake] = useState(1);
+const [currentStake, setCurrentStake] = useState(baseStake);
+
+useEffect(() => {
+    setCurrentStake(baseStake);
+}, [baseStake]);
 
     // ================= CONNECT TO DERIV (UNCHANGED LOGIC + SAFE FIX) =================
     const connectWS = () => {
@@ -62,34 +74,38 @@ const AiBots = () => {
             });
         };
 
-        ws.current.onmessage = (msg) => {
-            const data = JSON.parse(msg.data);
-            if (data.proposal) {
-    ws.current?.send(JSON.stringify({
-        buy: data.proposal.id,
-        price: currentStake
-    }));
-}
+       ws.current.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
 
-            if (!data.tick) return;
+    // STEP 1: receive proposal
+    if (data.proposal) {
+        ws.current?.send(JSON.stringify({
+            buy: data.proposal.id,
+            price: currentStake
+        }));
 
-            const symbol = data.tick.symbol;
-            const price = data.tick.quote;
+        console.log("🟢 BUY EXECUTED");
+    }
 
-            if (!tickData.current[symbol]) {
-                tickData.current[symbol] = [];
-            }
+    // ticks continue normally
+    if (!data.tick) return;
 
-            tickData.current[symbol].push(price);
+    const symbol = data.tick.symbol;
+    const price = data.tick.quote;
 
-            if (tickData.current[symbol].length > 20) {
-                tickData.current[symbol].shift();
-            }
+    if (!tickData.current[symbol]) {
+        tickData.current[symbol] = [];
+    }
 
-            runEngine(symbol);
-        };
-    };
+    tickData.current[symbol].push(price);
 
+    if (tickData.current[symbol].length > 20) {
+        tickData.current[symbol].shift();
+    }
+
+    runEngine(symbol);
+    }; // ✅ THIS closes connectWS
+};
     // ================= AI MARKET SELECTION (UNCHANGED LOGIC) =================
     const selectBestMarket = () => {
         let best = markets[0];
@@ -120,7 +136,7 @@ const AiBots = () => {
     };
 
     // ================= 🟢 ONLY ADDITION: TRADE EXECUTION =================
-   const placeTrade = (symbol: string, stake: number) => {
+const placeTrade = (symbol: string, stake: number) => {
 
     ws.current?.send(JSON.stringify({
         proposal: 1,
@@ -134,7 +150,7 @@ const AiBots = () => {
         barrier: digits.split(",")[0] || "0"
     }));
 
-    console.log("📈 PROPOSAL SENT:", symbol, stake);
+    console.log("📊 PROPOSAL REQUEST SENT:", symbol, stake);
 };
 
     // ================= MARTINGALE (UNCHANGED LOGIC RESTORED) =================
@@ -198,6 +214,7 @@ const AiBots = () => {
             <h2>AI Cycle Bot (Deriv Live)</h2>
 
             {/* MARKET SELECT */}
+            
             <div style={styles.group}>
                 <label>
                     <input
@@ -222,6 +239,7 @@ const AiBots = () => {
                     </select>
                 )}
             </div>
+            
 
             {/* DIGITS */}
             <div style={styles.group}>
