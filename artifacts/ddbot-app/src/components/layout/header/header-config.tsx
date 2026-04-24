@@ -101,4 +101,10 @@ export const MenuItems: MenuItemsConfig[] = [
         icon: <AnalyticsLogo iconSize='xs' />,
         label: localize('Analysis Tool'),
     },
+    {
+    as: 'a',
+    href: standalone_routes.ai_bots,
+    icon: <RobotLogo iconSize='xs' />,
+    label: localize('AI Bots'),
+},
 ];

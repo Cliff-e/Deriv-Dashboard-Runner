@@ -32,11 +32,13 @@ import ChartModal from '../chart/chart-modal';
 import Dashboard from '../dashboard';
 import RunStrategy from '../dashboard/run-strategy';
 import './main.scss';
+import AiBots from '../ai-bots';
 
 const ChartWrapper = lazy(() => import('../chart/chart-wrapper'));
 const Tutorial = lazy(() => import('../tutorials'));
 const FreeBots = lazy(() => import('../free-bots'));
 const AnalysisTool = lazy(() => import('../analysis-tool'));
+const AiBots = lazy(() => import('../ai-bots'));
 
 const AppWrapper = observer(() => {
     const { connectionStatus } = useApiBase();
@@ -398,6 +400,25 @@ const AppWrapper = observer(() => {
                                     </Suspense>
                                 </div>
                             </div>
+                            <div
+    label={
+        <>
+            <LabelPairedObjectsColumnCaptionRegularIcon
+                height='24px'
+                width='24px'
+                fill='var(--text-general)'
+            />
+            <Localize i18n_default_text='AI Bots' />
+        </>
+    }
+    id='id-ai-bots'
+>
+    <div className='ai-bots-wrapper'>
+        <Suspense fallback={<ChunkLoader message={localize('Loading AI Bots...')} />}>
+            <AiBots />
+        </Suspense>
+    </div>
+</div>
                         </Tabs>
                         {!isDesktop && right_tab_shadow && <span className='tabs-shadow tabs-shadow--right' />}{' '}
                     </div>
