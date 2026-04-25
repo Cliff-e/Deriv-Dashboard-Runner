@@ -10,35 +10,30 @@ interface ChartWrapperProps {
     show_digits_stats: boolean;
 }
 
-const ChartWrapper = observer(
-    ({ prefix = 'chart', show_digits_stats }: ChartWrapperProps) => {
-        const { client, chart_store } = useStore();
-        const [uuid] = useState(() => uuidv4());
+const ChartWrapper = observer(({ prefix = 'chart', show_digits_stats }: ChartWrapperProps) => {
+    const { client, chart_store } = useStore();
+    const [uuid] = useState(uuidv4());
 
-        const uniqueKey = client?.loginid
-            ? `${prefix}-${client.loginid}`
-            : `${prefix}-${uuid}`;
+    const uniqueKey = client.loginid
+        ? `${prefix}-${client.loginid}`
+        : `${prefix}-${uuid}`;
 
-        // ✅ Safe access to candles
-        const candles = chart_store?.candles ?? [];
+    // ✅ THIS IS YOUR REAL DERIV DATA SOURCE (already used by chart)
+    const candles = chart_store?.candles || [];
 
-        // ✅ Extract last digit safely
-        const digits = useMemo(() => {
-            return candles.map(c => {
-                const close = c?.close ?? 0;
-                return Number(String(close).slice(-1));
-            });
-        }, [candles]);
+    // optional: digit extraction for later DCircles sync
+    const digits = useMemo(() => {
+        return candles.map(c => Number(String(c.close).slice(-1)));
+    }, [candles]);
 
-        return (
-            <Chart
-                key={uniqueKey}
-                show_digits_stats={show_digits_stats}
-                candles={candles}
-                digits={digits}
-            />
-        );
-    }
-);
+    return (
+        <Chart
+            key={uniqueKey}
+            show_digits_stats={show_digits_stats}
+            candles={candles}
+            digits={digits}
+        />
+    );
+});
 
 export default ChartWrapper;

@@ -14,6 +14,9 @@ import { ChartTitle, SmartChart } from '@deriv/deriv-charts';
 import { useDevice } from '@deriv-com/ui';
 import ToolbarWidgets from './toolbar-widgets';
 import '@deriv/deriv-charts/dist/smartcharts.css';
+import DigitCircles from '../d-circles/DigitCircles';
+import { useEffect, useRef, useState } from 'react';
+import { useDigits } from '@/hooks/useDigits';
 
 type TSubscription = {
     [key: string]: null | {
@@ -28,6 +31,7 @@ type TError = null | {
     };
 };
 
+
 const subscriptions: TSubscription = {};
 
 const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) => {
@@ -36,6 +40,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const { chart_store, run_panel, dashboard } = useStore();
     const [isSafari, setIsSafari] = useState(false);
 
+    
     const {
         chart_type,
         getMarketsOrder,
@@ -49,37 +54,26 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         setChartSubscriptionId,
         chart_subscription_id,
     } = chart_store;
+    const digits = useDigits(symbol);
+
     const chartSubscriptionIdRef = useRef(chart_subscription_id);
     const { isDesktop, isMobile } = useDevice();
     const { is_drawer_open } = run_panel;
     const { is_chart_modal_visible } = dashboard;
+
     const settings = {
-        assetInformation: false, // ui.is_chart_asset_info_visible,
+        assetInformation: false,
         countdown: true,
-        isHighestLowestMarkerEnabled: false, // TODO: Pending UI,
+        isHighestLowestMarkerEnabled: false,
         language: common.current_language.toLowerCase(),
         position: ui.is_chart_layout_default ? 'bottom' : 'left',
         theme: ui.is_dark_mode_on ? 'dark' : 'light',
     };
-    console.log({
-        chart_type,
-        getMarketsOrder,
-        granularity,
-        onSymbolChange,
-        setChartStatus,
-        symbol,
-        updateChartType,
-        updateGranularity,
-        updateSymbol,
-        setChartSubscriptionId,
-        chart_subscription_id,
-    });
 
     useEffect(() => {
-        // Safari browser detection
         const isSafariBrowser = () => {
             const ua = navigator.userAgent.toLowerCase();
-            return ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1 && ua.indexOf('android') === -1;
+            return ua.includes('safari') && !ua.includes('chrome') && !ua.includes('android');
         };
 
         setIsSafari(isSafariBrowser());
@@ -100,16 +94,20 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const requestAPI = (req: ServerTimeRequest | ActiveSymbolsRequest | TradingTimesRequest) => {
         return chart_api.api.send(req);
     };
+
     const requestForgetStream = (subscription_id: string) => {
-        subscription_id && chart_api.api.forget(subscription_id);
+        if (subscription_id) chart_api.api.forget(subscription_id);
     };
 
     const requestSubscribe = async (req: TicksStreamRequest, callback: (data: any) => void) => {
         try {
             requestForgetStream(chartSubscriptionIdRef.current);
+
             const history = await chart_api.api.send(req);
             setChartSubscriptionId(history?.subscription.id);
+
             if (history) callback(history);
+
             if (req.subscribe === 1) {
                 subscriptions[history?.subscription.id] = chart_api.api
                     .onMessage()
@@ -118,56 +116,82 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                     });
             }
         } catch (e) {
-            // eslint-disable-next-line no-console
-            (e as TError)?.error?.code === 'MarketIsClosed' && callback([]); //if market is closed sending a empty array  to resolve
+            (e as TError)?.error?.code === 'MarketIsClosed' && callback([]);
             console.log((e as TError)?.error?.message);
         }
     };
 
     if (!symbol) return null;
+
     const is_connection_opened = !!chart_api?.api;
-    return (
+
+return (
+    <div
+        className={classNames('dashboard__chart-wrapper', {
+            'dashboard__chart-wrapper--expanded': is_drawer_open && isDesktop,
+            'dashboard__chart-wrapper--modal': is_chart_modal_visible && isDesktop,
+            'dashboard__chart-wrapper--safari': isSafari,
+        })}
+        style={{ position: 'relative', minHeight: '700px' }} // 👈 important
+        dir="ltr"
+    >
+        
+        <SmartChart
+    id='dbot'
+    barriers={barriers}
+    showLastDigitStats={show_digits_stats}
+    chartControlsWidgets={null}
+    enabledChartFooter={false}
+    chartStatusListener={(v: boolean) => setChartStatus(!v)}
+    toolbarWidget={() => (
+        <ToolbarWidgets
+            updateChartType={updateChartType}
+            updateGranularity={updateGranularity}
+            position={!isDesktop ? 'bottom' : 'top'}
+            isDesktop={isDesktop}
+        />
+    )}
+    chartType={chart_type}
+    isMobile={isMobile}
+    enabledNavigationWidget={isDesktop}
+    granularity={granularity}
+    requestAPI={requestAPI}
+    requestForget={() => {}}
+    requestForgetStream={() => {}}
+    requestSubscribe={requestSubscribe}
+    settings={settings}
+    symbol={symbol}
+    topWidgets={() => <ChartTitle onChange={onSymbolChange} />}
+    isConnectionOpened={is_connection_opened}
+    getMarketsOrder={getMarketsOrder}
+    isLive
+    leftMargin={80}
+/>
+
+        {/* ✅ Overlay */}
         <div
-            className={classNames('dashboard__chart-wrapper', {
-                'dashboard__chart-wrapper--expanded': is_drawer_open && isDesktop,
-                'dashboard__chart-wrapper--modal': is_chart_modal_visible && isDesktop,
-                'dashboard__chart-wrapper--safari': isSafari,
-            })}
-            dir='ltr'
+            style={{
+                position: 'absolute',
+                bottom: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 10,
+                pointerEvents: 'none',
+            }}
         >
-            <SmartChart
-                id='dbot'
-                barriers={barriers}
-                showLastDigitStats={show_digits_stats}
-                chartControlsWidgets={null}
-                enabledChartFooter={false}
-                chartStatusListener={(v: boolean) => setChartStatus(!v)}
-                toolbarWidget={() => (
-                    <ToolbarWidgets
-                        updateChartType={updateChartType}
-                        updateGranularity={updateGranularity}
-                        position={!isDesktop ? 'bottom' : 'top'}
-                        isDesktop={isDesktop}
-                    />
-                )}
-                chartType={chart_type}
-                isMobile={isMobile}
-                enabledNavigationWidget={isDesktop}
-                granularity={granularity}
-                requestAPI={requestAPI}
-                requestForget={() => {}}
-                requestForgetStream={() => {}}
-                requestSubscribe={requestSubscribe}
-                settings={settings}
-                symbol={symbol}
-                topWidgets={() => <ChartTitle onChange={onSymbolChange} />}
-                isConnectionOpened={is_connection_opened}
-                getMarketsOrder={getMarketsOrder}
-                isLive
-                leftMargin={80}
-            />
+            <div
+                style={{
+                    pointerEvents: 'auto',
+                    background: 'rgba(0,0,0,0.5)',
+                    padding: '6px 10px',
+                    borderRadius: '10px'
+                }}
+            >
+                <DigitCircles digits={digits} />
+            </div>
         </div>
-    );
+    </div>
+);
 });
 
 export default Chart;

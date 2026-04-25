@@ -172,3 +172,17 @@
     left: 0;
     top: 0;
 }
+.dashboard__chart-wrapper {
+    position: relative !important;
+    height: auto !important;
+}
+@keyframes pulse {
+    0%, 100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translateX(-50%) scale(1.3);
+        opacity: 0.6;
+    }
+}
