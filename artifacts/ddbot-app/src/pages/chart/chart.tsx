@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite';
 import chart_api from '@/external/bot-skeleton/services/api/chart-api';
 import { useStore } from '@/hooks/useStore';
 import {
-    TicksHistoryResponse,
     TicksStreamRequest,
 } from '@deriv/api-types';
 import { ChartTitle, SmartChart } from '@deriv/deriv-charts';
@@ -16,13 +15,6 @@ import DigitCircles from '../d-circles/DigitCircles';
 type TSubscription = {
     [key: string]: null | {
         unsubscribe?: () => void;
-    };
-};
-
-type TError = null | {
-    error?: {
-        code?: string;
-        message?: string;
     };
 };
 
@@ -50,24 +42,9 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     const { is_chart_modal_visible } = dashboard;
 
     const [isSafari, setIsSafari] = useState(false);
+    const [lastQuote, setLastQuote] = useState<number | null>(null);
 
-    // ===============================
-    // 🔥 LIVE DIGIT STATE
-    // ===============================
-    const [lastDigit, setLastDigit] = useState<number | null>(null);
-
-    // ===============================
-    // 🔥 1200 TICK BUFFER (CORE FEATURE)
-    // ===============================
-    const tickBufferRef = useRef<number[]>(
-    JSON.parse(localStorage.getItem('digits_buffer') || '[]')
-);
-
-    // ===============================
-    // REF FOR STABILITY
-    // ===============================
     const chartSubscriptionIdRef = useRef(chart_subscription_id);
-
     const barriers = useMemo(() => [], []);
 
     // ===============================
@@ -107,7 +84,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
     }, []);
 
     // ===============================
-    // 🔥 MAIN STREAM (SYNC + BUFFER)
+    // 🔥 CLEAN STREAM (IMPORTANT)
     // ===============================
     const requestSubscribe = useCallback(async (
         req: TicksStreamRequest,
@@ -125,40 +102,24 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 subscriptions[history?.subscription.id] =
                     chart_api.api.onMessage()?.subscribe(({ data }) => {
 
-                  const quote = data?.tick?.quote;
+                        const quote = data?.tick?.quote;
 
-if (quote !== undefined && quote !== null) {
+                        // ✅ ONLY THIS — keep stream clean
+                        if (quote !== undefined && quote !== null) {
+                            setLastQuote(quote);
+                        }
 
-   // 🔥 SAFE DIGIT EXTRACTION (fixes 0 bug)
- 
-
-    const digit = Math.abs(Math.trunc(quote * 10) % 10);
-
-    setLastDigit(digit);
-
-    setDigits(prev => {
-        const updated = [...prev.slice(-1199), digit];
-
-        localStorage.setItem(
-            'digits_buffer',
-            JSON.stringify(updated)
-        );
-
-        return updated;
-    });
-}
-
-                        callback(data);
+                        callback(data); // ⚠️ DO NOT TOUCH
                     });
             }
-        } catch (e) {
-            (e as TError)?.error?.code === 'MarketIsClosed' && callback([]);
-            console.log((e as TError)?.error?.message);
+        } catch (e: any) {
+            if (e?.error?.code === 'MarketIsClosed') callback([]);
+            console.log(e?.error?.message);
         }
     }, [requestForgetStream, setChartSubscriptionId]);
 
     // ===============================
-    // STABLE WIDGETS
+    // UI WIDGETS
     // ===============================
     const toolbarWidget = useCallback(() => (
         <ToolbarWidgets
@@ -173,9 +134,6 @@ if (quote !== undefined && quote !== null) {
         <ChartTitle onChange={onSymbolChange} />
     ), [onSymbolChange]);
 
-    // ===============================
-    // SETTINGS
-    // ===============================
     const settings = useMemo(() => ({
         assetInformation: false,
         countdown: true,
@@ -198,14 +156,6 @@ if (quote !== undefined && quote !== null) {
 
     const is_connection_opened = !!chart_api?.api;
 
-    // ===============================
-    // DIGITS (FROM BUFFER)
-    // ===============================
-    const [digits, setDigits] = useState<number[]>(() => {
-    const saved = localStorage.getItem('digits_buffer');
-    return saved ? JSON.parse(saved) : [];
-});
-    
     return (
         <div
             className={classNames('dashboard__chart-wrapper', {
@@ -241,9 +191,7 @@ if (quote !== undefined && quote !== null) {
                 leftMargin={80}
             />
 
-            {/* ===============================
-                🔥 DIGIT OVERLAY (SYNCED)
-            =============================== */}
+            {/* 🔥 DIGIT OVERLAY (UNCHANGED UI) */}
             <div
                 style={{
                     position: 'absolute',
@@ -262,7 +210,7 @@ if (quote !== undefined && quote !== null) {
                         borderRadius: '10px',
                     }}
                 >
-                    <DigitCircles digits={digits} />
+                    <DigitCircles quote={lastQuote} />
                 </div>
             </div>
         </div>

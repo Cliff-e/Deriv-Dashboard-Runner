@@ -1,23 +1,68 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 
-const DigitCircles = ({ digits }: { digits: number[] }) => {
+// 🔥 TRUE LAST DIGIT (NO ROUNDING, NO FIXED PRECISION)
+const getLastDigit = (price: number) => {
+    const str = price.toLocaleString('en-US', {
+        useGrouping: false,
+        maximumFractionDigits: 20,
+    });
+
+    const parts = str.split('.');
+
+    // No decimals → use integer last digit
+    if (parts.length < 2) {
+        return Number(str.slice(-1));
+    }
+
+    // Return last decimal digit
+    return Number(parts[1].slice(-1));
+};
+
+const DigitCircles = ({ quote }: { quote: number | null }) => {
 
     // =========================
-    // SAFE INPUT SANITIZATION (FIXED)
+    // INTERNAL DIGIT BUFFER
+    // =========================
+    const [digits, setDigits] = useState<number[]>(() => {
+        const saved = localStorage.getItem('digits_buffer');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // =========================
+    // SYNC WITH LIVE QUOTE
+    // =========================
+    useEffect(() => {
+        if (quote === null || quote === undefined) return;
+
+        const digit = getLastDigit(quote);
+
+        setDigits(prev => {
+            const updated =
+                prev.length >= 1200
+                    ? [...prev.slice(1), digit]
+                    : [...prev, digit];
+
+            localStorage.setItem('digits_buffer', JSON.stringify(updated));
+            return updated;
+        });
+    }, [quote]);
+
+    // =========================
+    // SAFE DIGITS
     // =========================
     const safeDigits = useMemo(() => {
         if (!Array.isArray(digits)) return [];
 
         return digits
-            .map(d => Number(d))                     // 🔥 force conversion (fixes "0")
-            .filter(d => !isNaN(d) && d >= 0 && d <= 9) // 🔥 keep only valid digits
-            .map(d => Math.floor(d));              // 🔥 ensure integers
+            .map(d => Number(d))
+            .filter(d => !isNaN(d) && d >= 0 && d <= 9)
+            .map(d => Math.floor(d));
     }, [digits]);
 
     const total = safeDigits.length;
 
     // =========================
-    // FREQUENCY MAP (0–9)
+    // FREQUENCY MAP
     // =========================
     const freq = useMemo(() => {
         const map: Record<number, number> = {};
@@ -27,7 +72,7 @@ const DigitCircles = ({ digits }: { digits: number[] }) => {
         }
 
         safeDigits.forEach(d => {
-            map[d]++; // now guaranteed safe
+            map[d]++;
         });
 
         return map;
@@ -47,7 +92,6 @@ const DigitCircles = ({ digits }: { digits: number[] }) => {
 
     const most = ranked[0]?.digit;
     const least = ranked[ranked.length - 1]?.digit;
-
     const activeDigit = safeDigits[safeDigits.length - 1];
 
     // =========================
@@ -59,13 +103,16 @@ const DigitCircles = ({ digits }: { digits: number[] }) => {
         return '#888';
     };
 
+    // =========================
+    // UI (UNCHANGED)
+    // =========================
     return (
         <div
             style={{
                 display: 'grid',
-               gridTemplateColumns: 'repeat(5, minmax(70px, 1fr))',
+                gridTemplateColumns: 'repeat(5, minmax(70px, 1fr))',
                 gap: '8px',
-                marginTop: '20px'   // 👈 ADD THIS
+                marginTop: '20px'
             }}
         >
             {Object.keys(freq).map(key => {
@@ -120,19 +167,19 @@ const DigitCircles = ({ digits }: { digits: number[] }) => {
                         </div>
 
                         {/* PERCENT */}
- <div
-    style={{
-        fontSize: 10,
-        color: '#fff',
-        background: '#000',
-        display: 'inline-block',
-        padding: '2px 6px',
-        borderRadius: '4px',
-        fontWeight: 600
-    }}
->
-   {percent.toFixed(2)}%
-</div>
+                        <div
+                            style={{
+                                fontSize: 10,
+                                color: '#fff',
+                                background: '#000',
+                                display: 'inline-block',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontWeight: 600
+                            }}
+                        >
+                            {percent.toFixed(2)}%
+                        </div>
                     </div>
                 );
             })}
