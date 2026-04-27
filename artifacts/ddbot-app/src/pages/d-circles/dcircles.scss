@@ -1,109 +1,198 @@
+/* =========================
+   BASE CONTAINER
+========================= */
 .dcircles-container {
-    padding: 20px;
+    width: 100%;
+    min-height: 100vh;   /* always fill screen */
+    height: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 14px;
+    box-sizing: border-box;
+
     background: #0f1117;
     color: #fff;
     font-family: Inter, sans-serif;
-    min-height: 100vh;
 }
 
-/* Header */
+/* ORIENTATION */
+.dcircles-container.portrait {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dcircles-container.landscape {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+/* =========================
+   HEADER
+========================= */
 h3 {
-    margin-bottom: 15px;
+    margin: 0 0 10px;
     font-weight: 500;
     color: #ddd;
 }
 
-/* Dropdown */
+/* =========================
+   SYMBOL SELECT
+========================= */
 .symbol-select {
-    margin-bottom: 20px;
     padding: 8px 10px;
     background: #1a1d26;
     color: #fff;
     border: 1px solid #2a2e3a;
     border-radius: 6px;
+    margin-bottom: 12px;
 }
 
-/* 🔵 CIRCLES GRID */
+/* =========================
+   CIRCLES GRID
+========================= */
 .circles {
-      position: relative;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 18px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+    gap: 10px;
 }
 
-/* Circle wrapper */
 .circle-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-/* Circle (RING STYLE — NO PIE) */
+/* =========================
+   CIRCLE DESIGN
+========================= */
 .circle {
-    position: relative; /* ✅ REQUIRED FOR CURSOR */
-
     width: 65px;
     height: 65px;
     border-radius: 50%;
+    background: #12151c;
     border: 3px solid #333;
+
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #12151c;
+
     font-size: 18px;
     font-weight: 600;
-    transition: all 0.25s ease;
+
+    position: relative;
+    transition: 0.2s ease;
 }
-/* Hover effect */
+
 .circle:hover {
     transform: scale(1.05);
 }
 
-/* Percentage text */
+/* ACTIVE CIRCLE GLOW */
+.circle.active {
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+}
+
+/* CURSOR ARROW */
+.circle.active::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 18px solid #fff;
+
+    filter: drop-shadow(0 0 10px #fff);
+    animation: bounce 1.2s infinite ease-in-out;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(5px); }
+}
+
+/* circle percentage */
 .circle-wrapper small {
     margin-top: 6px;
     font-size: 12px;
-    color: #888;
+    color: #bbb;
 }
 
-/* 📊 OVER / UNDER BAR */
+/* =========================
+   EVEN / ODD BAR
+========================= */
+.even-odd {
+    display: flex;
+    height: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1a1d26;
+    margin: 14px 0;
+}
+
+.even,
+.odd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.even {
+    background: linear-gradient(90deg, #3399ff, #2277cc);
+}
+
+.odd {
+    background: linear-gradient(90deg, #ff9900, #cc7700);
+}
+
+/* =========================
+   OVER / UNDER BAR
+========================= */
 .bar {
     display: flex;
     height: 24px;
     border-radius: 12px;
     overflow: hidden;
     background: #1a1d26;
-    margin-bottom: 20px;
+    margin: 14px 0;
+}
+
+.over,
+.under {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .over {
     background: linear-gradient(90deg, #00ff66, #00cc55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 500;
 }
 
 .under {
     background: linear-gradient(90deg, #ff3333, #cc2222);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 500;
 }
 
-/* 🚨 SIGNALS */
+/* =========================
+   SIGNALS
+========================= */
 .signals {
-    margin-bottom: 20px;
+    margin: 10px 0;
 }
 
 .signal {
-    padding: 10px 12px;
+    padding: 10px;
     border-radius: 6px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     font-size: 13px;
     background: #1a1f2b;
     border-left: 3px solid transparent;
@@ -114,213 +203,156 @@ h3 {
 .signal.over { border-color: #00ff66; }
 .signal.under { border-color: #ff3333; }
 
-/* 🔢 STREAM (WITH CURSOR) */
-.stream-container {
-    overflow: visible; /* 🔥 IMPORTANT (fixes cursor) */
-    background: #12151c;
-    padding: 10px;
-    border-radius: 8px;
-    margin-top: 15px;
-}
-
-.stream-track {
+/* =========================
+   STREAM
+========================= */
+.stream {
     display: flex;
     gap: 8px;
-    align-items: center;
+    padding: 10px;
+    background: #12151c;
+    border-radius: 8px;
+    overflow-x: auto;
 }
 
-/* digits */
 .tick {
     font-size: 13px;
     color: #666;
-    transition: all 0.2s ease;
+    transition: 0.2s;
 }
 
-/* ACTIVE DIGIT */
 .tick.active {
     color: #fff;
     font-weight: bold;
     transform: scale(1.2);
-    position: relative; /* 🔥 REQUIRED */
 }
 
-/* 👇 CURSOR LINE */
-.tick.active::after {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 18px;
-
-    background: #fff;
-    border-radius: 2px;
-
-    /* 🔥 STRONG visible glow */
-    box-shadow: 
-        0 0 8px #fff,
-        0 0 16px #fff,
-        0 0 24px #fff;
-
-    z-index: 10;
-
-    animation: blink 1s infinite;
-}
-
-.tick.active::after {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 14px;
-    background: #ffffff;
-    border-radius: 2px;
-
-    box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff;
-
-    animation: pulse 1.2s infinite ease-in-out;
-}
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: translateX(-50%) scaleY(1);
-    }
-    50% {
-        opacity: 0.5;
-        transform: translateX(-50%) scaleY(1.4);
-    }
-}
-.circle.active::after {
-    content: '';
-    position: absolute;
-    bottom: -22px; /* space below circle */
-    left: 50%;
-    transform: translateX(-50%);
-
-    width: 0;
-    height: 0;
-
-    /* 🔺 BIG upward arrow */
-    border-left: 14px solid transparent;
-    border-right: 14px solid transparent;
-    border-top: 20px solid #ffffff;
-
-    /* 🔥 strong glow */
-    filter: drop-shadow(0 0 8px #ffffff)
-            drop-shadow(0 0 16px #ffffff);
-
-    z-index: 20;
-
-    animation: bounceGlow 1.2s infinite ease-in-out;
-}
-@keyframes bounceGlow {
-    0%, 100% {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
-    50% {
-        transform: translateX(-50%) translateY(6px); /* subtle bounce */
-        opacity: 0.7;
-    }
-}
-/* ⚖️ EVEN / ODD BAR */
-.even-odd {
-    display: flex;
-    height: 24px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: #1a1d26;
-    margin: 20px 0;
-}
-
-.even {
-    background: linear-gradient(90deg, #3399ff, #2277cc);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.odd {
-    background: linear-gradient(90deg, #ff9900, #cc7700);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 500;
-}
+/* =========================
+   EVEN/ODD TICKER
+========================= */
 .ticker-container {
-    overflow: hidden;
     background: #0c0f15;
     border-radius: 8px;
-    padding: 10px 0;
-    margin-top: 20px;
+    padding: 10px;
+    overflow: hidden;
 }
+
 .ticker-track {
     display: flex;
     gap: 10px;
-    width: max-content;
+}
 
-    @keyframes scrollRight {
-    0% {
-        transform: translateX(-100%); /* start off left */
-    }
-    100% {
-        transform: translateX(0); /* move into view */
-    }
-}
-}
-/* Even = Dark Green */
-/* Even = Dark Green */
+/* BOXES */
 .tick-box {
-    min-width: 70px;   /* 🔥 bigger box */
+    width: 70px;
     height: 70px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    font-size: 34px;   /* 🔥 THIS controls E / O size */
+    font-size: 28px;
     font-weight: 700;
 
     border-radius: 12px;
 }
+
+/* EVEN */
 .tick-box.even {
     background: linear-gradient(135deg, #064e3b, #022c22);
     color: #00ffcc;
-
-    box-shadow:
-        0 0 12px rgba(0, 255, 150, 0.5),
-        inset 0 0 8px rgba(0, 255, 150, 0.2);
+    box-shadow: 0 0 12px rgba(0, 255, 150, 0.4);
 }
 
-/* Odd = Maroon */
+/* ODD */
 .tick-box.odd {
     background: linear-gradient(135deg, #5a0f1c, #2a0a0f);
     color: #ff4d4d;
+    box-shadow: 0 0 12px rgba(255, 60, 60, 0.4);
+}
+/* =========================
+   RESPONSIVE FIX: EVEN/ODD ON SMALL SCREENS
+========================= */
+@media (max-width: 768px) {
 
-    box-shadow:
-        0 0 12px rgba(255, 60, 60, 0.5),
-        inset 0 0 8px rgba(255, 60, 60, 0.2);
+    .dcircles-container {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .circles {
+        order: 1;
+    }
+
+    .stream {
+        order: 2;
+    }
+
+    .ticker-container {
+        order: 3;
+    }
+
+    .bar {
+        order: 4;
+    }
+
+    .signals {
+        order: 5;
+    }
+
+    .even-odd {
+        order: 99; /* push to bottom */
+        width: 100%;
+        margin-top: 20px;
+    }
 }
-.tick-box {
-    min-width: 5%;
-    height:80%;
-    font-size: 10px;
-}
-.tick-box {
+.tick-box.latest {
     position: relative;
+    transform: scale(1.08);
 }
 
-.tick-mark {
+/* cursor above latest E/O */
+.tick-box.latest::before {
+    content: '';
     position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 14px;
-    color: #ffffff;
-    text-shadow: 0 0 6px #ffffff;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 0;
+    height: 0;
+
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 12px solid #ffffff;
+
+    filter: drop-shadow(0 0 6px #fff);
+
+    animation: cursorPulse 1s infinite ease-in-out;
+}
+
+@keyframes cursorPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    50% {
+        opacity: 0.6;
+        transform: translateX(-50%) translateY(4px);
+    }
+}
+.circle-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 12px;
+}
+html, body {
+    height: auto;
+    overflow-y: auto;
+}
+html, body {
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
 }
