@@ -12,7 +12,6 @@ import { useDevice } from '@deriv-com/ui';
 import ToolbarWidgets from './toolbar-widgets';
 import '@deriv/deriv-charts/dist/smartcharts.css';
 import DigitCircles from '../d-circles/DigitCircles';
-import { useDigits } from '@/hooks/useDigits';
 
 type TSubscription = {
     [key: string]: null | {
@@ -46,20 +45,34 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         chart_subscription_id,
     } = chart_store;
 
-    const digits = useDigits(symbol);
-
-    const chartSubscriptionIdRef = useRef(chart_subscription_id);
-
     const { isDesktop, isMobile } = useDevice();
     const { is_drawer_open } = run_panel;
     const { is_chart_modal_visible } = dashboard;
 
     const [isSafari, setIsSafari] = useState(false);
 
-    // ✅ Stable barriers (FIXED)
+    // ===============================
+    // 🔥 LIVE DIGIT STATE
+    // ===============================
+    const [lastDigit, setLastDigit] = useState<number | null>(null);
+
+    // ===============================
+    // 🔥 1200 TICK BUFFER (CORE FEATURE)
+    // ===============================
+    const tickBufferRef = useRef<number[]>(
+    JSON.parse(localStorage.getItem('digits_buffer') || '[]')
+);
+
+    // ===============================
+    // REF FOR STABILITY
+    // ===============================
+    const chartSubscriptionIdRef = useRef(chart_subscription_id);
+
     const barriers = useMemo(() => [], []);
 
-    // ✅ Safari detection once
+    // ===============================
+    // SAFARI DETECT
+    // ===============================
     useEffect(() => {
         const ua = navigator.userAgent.toLowerCase();
         setIsSafari(
@@ -81,7 +94,9 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (!symbol) updateSymbol();
     }, [symbol, updateSymbol]);
 
-    // ✅ Stable API request
+    // ===============================
+    // API WRAPPER
+    // ===============================
     const requestAPI = useCallback((req) => {
         if (!chart_api?.api) return Promise.reject('API not ready');
         return chart_api.api.send(req);
@@ -91,8 +106,13 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         if (subscription_id) chart_api.api.forget(subscription_id);
     }, []);
 
-    // ✅ Stable subscribe function (IMPORTANT FIX)
-    const requestSubscribe = useCallback(async (req: TicksStreamRequest, callback: (data: any) => void) => {
+    // ===============================
+    // 🔥 MAIN STREAM (SYNC + BUFFER)
+    // ===============================
+    const requestSubscribe = useCallback(async (
+        req: TicksStreamRequest,
+        callback: (data: any) => void
+    ) => {
         try {
             requestForgetStream(chartSubscriptionIdRef.current);
 
@@ -103,7 +123,31 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
 
             if (req.subscribe === 1) {
                 subscriptions[history?.subscription.id] =
-                    chart_api.api.onMessage()?.subscribe(({ data }: { data: TicksHistoryResponse }) => {
+                    chart_api.api.onMessage()?.subscribe(({ data }) => {
+
+                  const quote = data?.tick?.quote;
+
+if (quote !== undefined && quote !== null) {
+
+   // 🔥 SAFE DIGIT EXTRACTION (fixes 0 bug)
+ 
+
+    const digit = Math.abs(Math.trunc(quote * 10) % 10);
+
+    setLastDigit(digit);
+
+    setDigits(prev => {
+        const updated = [...prev.slice(-1199), digit];
+
+        localStorage.setItem(
+            'digits_buffer',
+            JSON.stringify(updated)
+        );
+
+        return updated;
+    });
+}
+
                         callback(data);
                     });
             }
@@ -113,7 +157,9 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         }
     }, [requestForgetStream, setChartSubscriptionId]);
 
-    // ✅ Stable widgets (IMPORTANT FIX)
+    // ===============================
+    // STABLE WIDGETS
+    // ===============================
     const toolbarWidget = useCallback(() => (
         <ToolbarWidgets
             updateChartType={updateChartType}
@@ -127,6 +173,9 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         <ChartTitle onChange={onSymbolChange} />
     ), [onSymbolChange]);
 
+    // ===============================
+    // SETTINGS
+    // ===============================
     const settings = useMemo(() => ({
         assetInformation: false,
         countdown: true,
@@ -136,7 +185,9 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
         theme: ui.is_dark_mode_on ? 'dark' : 'light',
     }), [common.current_language, ui.is_chart_layout_default, ui.is_dark_mode_on]);
 
-    // ✅ Cleanup subscriptions (IMPORTANT FIX)
+    // ===============================
+    // CLEANUP
+    // ===============================
     useEffect(() => {
         return () => {
             Object.values(subscriptions).forEach(sub => sub?.unsubscribe?.());
@@ -147,6 +198,14 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
 
     const is_connection_opened = !!chart_api?.api;
 
+    // ===============================
+    // DIGITS (FROM BUFFER)
+    // ===============================
+    const [digits, setDigits] = useState<number[]>(() => {
+    const saved = localStorage.getItem('digits_buffer');
+    return saved ? JSON.parse(saved) : [];
+});
+    
     return (
         <div
             className={classNames('dashboard__chart-wrapper', {
@@ -154,7 +213,7 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 'dashboard__chart-wrapper--modal': is_chart_modal_visible && isDesktop,
                 'dashboard__chart-wrapper--safari': isSafari,
             })}
-            style={{ position: 'relative', minHeight: '700px' }}
+            style={{ position: 'relative', minHeight: '800px' }}
             dir="ltr"
         >
             <SmartChart
@@ -182,7 +241,9 @@ const Chart = observer(({ show_digits_stats }: { show_digits_stats: boolean }) =
                 leftMargin={80}
             />
 
-            {/* Overlay */}
+            {/* ===============================
+                🔥 DIGIT OVERLAY (SYNCED)
+            =============================== */}
             <div
                 style={{
                     position: 'absolute',

@@ -1,19 +1,41 @@
 import React, { useMemo } from 'react';
 
 const DigitCircles = ({ digits }: { digits: number[] }) => {
-    const total = digits.length || 1;
 
-    // 🔢 frequency
-    const freq = useMemo(() => {
-        const map: Record<number, number> = {};
-        for (let i = 0; i < 10; i++) map[i] = 0;
+    // =========================
+    // SAFE INPUT SANITIZATION (FIXED)
+    // =========================
+    const safeDigits = useMemo(() => {
+        if (!Array.isArray(digits)) return [];
 
-        digits.forEach(d => map[d]++);
-
-        return map;
+        return digits
+            .map(d => Number(d))                     // 🔥 force conversion (fixes "0")
+            .filter(d => !isNaN(d) && d >= 0 && d <= 9) // 🔥 keep only valid digits
+            .map(d => Math.floor(d));              // 🔥 ensure integers
     }, [digits]);
 
-    // 🏆 ranking
+    const total = safeDigits.length;
+
+    // =========================
+    // FREQUENCY MAP (0–9)
+    // =========================
+    const freq = useMemo(() => {
+        const map: Record<number, number> = {};
+
+        for (let i = 0; i < 10; i++) {
+            map[i] = 0;
+        }
+
+        safeDigits.forEach(d => {
+            map[d]++; // now guaranteed safe
+        });
+
+        return map;
+    }, [safeDigits]);
+
+    // =========================
+    // RANKING
+    // =========================
     const ranked = useMemo(() => {
         return Object.entries(freq)
             .map(([digit, count]) => ({
@@ -24,14 +46,16 @@ const DigitCircles = ({ digits }: { digits: number[] }) => {
     }, [freq]);
 
     const most = ranked[0]?.digit;
-    const least = ranked[9]?.digit;
+    const least = ranked[ranked.length - 1]?.digit;
 
-    // 🎯 ACTIVE (latest digit)
-    const activeDigit = digits[digits.length - 1];
+    const activeDigit = safeDigits[safeDigits.length - 1];
 
+    // =========================
+    // COLOR LOGIC
+    // =========================
     const getColor = (d: number) => {
-        if (d === most) return '#00ff66';   // 🟢 most
-        if (d === least) return '#ff3333';  // 🔴 least
+        if (d === most) return '#00ff66';
+        if (d === least) return '#ff3333';
         return '#888';
     };
 
@@ -39,22 +63,27 @@ const DigitCircles = ({ digits }: { digits: number[] }) => {
         <div
             style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(5, 1fr)',
-                gap: '8px'
+               gridTemplateColumns: 'repeat(5, minmax(70px, 1fr))',
+                gap: '8px',
+                marginTop: '20px'   // 👈 ADD THIS
             }}
         >
-            {Object.keys(freq).map(d => {
-                const digit = Number(d);
-                const percent = (freq[digit] / total) * 100;
+            {Object.keys(freq).map(key => {
+                const digit = Number(key);
+
+                const percent = total > 0
+                    ? (freq[digit] / total) * 100
+                    : 0;
+
                 const isActive = digit === activeDigit;
 
                 return (
                     <div key={digit} style={{ textAlign: 'center' }}>
                         
-                        {/* 🔵 CIRCLE */}
+                        {/* CIRCLE */}
                         <div
                             style={{
-                                position: 'relative', // 🔥 required for cursor
+                                position: 'relative',
                                 width: 40,
                                 height: 40,
                                 borderRadius: '50%',
@@ -70,7 +99,7 @@ const DigitCircles = ({ digits }: { digits: number[] }) => {
                         >
                             {digit}
 
-                            {/* 🔺 RED TRIANGLE CURSOR */}
+                            {/* ACTIVE POINTER */}
                             {isActive && (
                                 <div
                                     style={{
@@ -90,10 +119,20 @@ const DigitCircles = ({ digits }: { digits: number[] }) => {
                             )}
                         </div>
 
-                        {/* 📊 % */}
-                        <div style={{ fontSize: 10, color: '#aaa' }}>
-                            {percent.toFixed(0)}%
-                        </div>
+                        {/* PERCENT */}
+ <div
+    style={{
+        fontSize: 10,
+        color: '#fff',
+        background: '#000',
+        display: 'inline-block',
+        padding: '2px 6px',
+        borderRadius: '4px',
+        fontWeight: 600
+    }}
+>
+   {percent.toFixed(2)}%
+</div>
                     </div>
                 );
             })}
